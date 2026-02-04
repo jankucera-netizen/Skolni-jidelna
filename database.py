@@ -1,8 +1,15 @@
 import sqlite3
 
+def connect_db():
+    """
+    Vytvoří a vrátí připojení k databázi.
+    Tuhle funkci volá i main.py, proto tu musí být!
+    """
+    return sqlite3.connect("jidelna.db")
+
 def create_tables():
-    # Připojení k databázi (vytvoří soubor jidelna.db, pokud neexistuje)
-    conn = sqlite3.connect("jidelna.db")
+    """Vytvoří potřebné tabulky, pokud neexistují."""
+    conn = connect_db()
     cursor = conn.cursor()
     
     # 1. Tabulka Jídla
@@ -38,7 +45,23 @@ def create_tables():
     
     conn.commit()
     conn.close()
-    print("Hotovo! Databáze a tabulky vytvořeny.")
+    print("-> Tabulky v databázi byly zkontrolovány/vytvořeny.")
 
+# --- TESTOVACÍ ČÁST  ---
 if __name__ == "__main__":
+    print("--- ZAČÍNÁM TESTOVAT DATABÁZI ---")
+    
+    # 1. Zkusíme vytvořit tabulky
     create_tables()
+    
+    # 2. Zkusíme cvičně vložit strávníka
+    conn = connect_db()
+    cursor = conn.cursor()
+    # Vložíme testovacího žáka, jen abychom viděli, že to zapisuje
+    cursor.execute("INSERT INTO stravnici (jmeno, trida) VALUES (?, ?)", ("Testovací Žák", "9.A"))
+    conn.commit()
+    
+    print("-> Testovací strávník vložen.")
+    conn.close()
+    
+    print("--- TESTOVÁNÍ DOKONČENO (Vše OK) ---")
