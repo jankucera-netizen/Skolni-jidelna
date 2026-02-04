@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import database
-import logic  # Tady zapojujeme práci kolegy z logiky
+import logic
 
 class JidelnaApp:
     def __init__(self, root):
@@ -12,23 +12,21 @@ class JidelnaApp:
         # Kontrola/Vytvoření tabulek
         database.create_tables()
 
-        # --- HLAVNÍ ROZCESTNÍK (Záložky/Tabs) ---
+        # HLAVNÍ ROZCESTNÍK
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # 1. Záložka - Správa jídel (To dělal kolega před tebou, tady to jen balíme do záložky)
+        # 1. Záložka - Správa jídel
         self.tab_jidla = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_jidla, text=" 🍕 Správa jídel (Admin) ")
         self.setup_tab_jidla()
 
-        # 2. Záložka - Objednávky (To je tvoje práce)
+        # 2. Záložka - Objednávky
         self.tab_objednavky = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_objednavky, text=" 🛒 Nová objednávka ")
         self.setup_tab_objednavky()
 
-    # ==========================================
     # KÓD PRO ZÁLOŽKU 1: SPRÁVA JÍDEL
-    # ==========================================
     def setup_tab_jidla(self):
         # Formulář
         frame_form = tk.LabelFrame(self.tab_jidla, text="Přidat nové jídlo")
@@ -53,9 +51,7 @@ class JidelnaApp:
         
         self.naci_jidla()
 
-    # ==========================================
-    # KÓD PRO ZÁLOŽKU 2: OBJEDNÁVKY (Tvoje část)
-    # ==========================================
+    # KÓD PRO ZÁLOŽKU 2: OBJEDNÁVKY
     def setup_tab_objednavky(self):
         lbl = tk.Label(self.tab_objednavky, text="Zadejte ID jídla z nabídky:", font=("Arial", 12))
         lbl.pack(pady=20)
@@ -74,7 +70,7 @@ class JidelnaApp:
         self.lbl_status = tk.Label(self.tab_objednavky, text="", fg="blue", font=("Arial", 10))
         self.lbl_status.pack()
 
-    # --- FUNKCE PRO TLAČÍTKA ---
+    # FUNKCE PRO TLAČÍTKA
     def pridat_jidlo(self):
         nazev = self.entry_nazev.get()
         try:
@@ -109,15 +105,15 @@ class JidelnaApp:
         try:
             jidlo_id = int(jidlo_id_str)
             
-            # 1. Ověření přes logic.py (práce Kamaráda 1)
+            # 1. Ověření přes logic.py
             validni, zprava = logic.validovat_objednavku(jidlo_id, stravnik_id)
             
             if validni:
-                # 2. Uložení do DB (práce Tebe a Leadera)
+                # 2. Uložení do DB
                 conn = database.connect_db()
                 cursor = conn.cursor()
                 cursor.execute("INSERT INTO objednavky (datum, stravnik_id, jidlo_id) VALUES (?, ?, ?)", 
-                               ("2026-02-17", stravnik_id, jidlo_id))
+                            ("2026-02-17", stravnik_id, jidlo_id))
                 conn.commit()
                 conn.close()
                 self.lbl_status.config(text=f"✅ Objednáno! (Jídlo ID: {jidlo_id})", fg="green")
@@ -125,7 +121,7 @@ class JidelnaApp:
                 self.lbl_status.config(text=f"❌ Chyba: {zprava}", fg="red")
                 
         except ValueError:
-             messagebox.showerror("Chyba", "ID jídla musí být číslo.")
+            messagebox.showerror("Chyba", "ID jídla musí být číslo.")
 
 if __name__ == "__main__":
     root = tk.Tk()
