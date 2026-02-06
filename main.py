@@ -6,30 +6,32 @@ import logic
 class JidelnaApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Školní jídelna - Skupina 7 (Final Verze)")
+        self.root.title("Školní jídelna - Skupina 7 (Final Verze + Admin)")
         self.root.geometry("900x600")
         
         # Kontrola/Vytvoření tabulek
         database.create_tables()
 
-        # HLAVNÍ ROZCESTNÍK
+        # --- HLAVNÍ ROZCESTNÍK (Záložky) ---
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # 1. Záložka - Správa jídel
+        #Správa jídel
         self.tab_jidla = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_jidla, text=" 🍕 Správa jídel (Admin) ")
         self.setup_tab_jidla()
 
-        # 2. Záložka - Objednávky
+        #Objednávky
         self.tab_objednavky = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_objednavky, text=" 🛒 Nová objednávka ")
         self.setup_tab_objednavky()
 
-    # KÓD PRO ZÁLOŽKU 1: SPRÁVA JÍDEL
+    # ==========================================
+    # SPRÁVA JÍDEL
+    # ==========================================
     def setup_tab_jidla(self):
         # Formulář
-        frame_form = tk.LabelFrame(self.tab_jidla, text="Přidat nové jídlo")
+        frame_form = tk.LabelFrame(self.tab_jidla, text="Přidat / Odebrat jídlo")
         frame_form.pack(fill="x", padx=10, pady=5)
 
         tk.Label(frame_form, text="Název:").pack(side="left", padx=5)
@@ -40,7 +42,12 @@ class JidelnaApp:
         self.entry_cena = tk.Entry(frame_form, width=10)
         self.entry_cena.pack(side="left", padx=5)
 
+        # Tlačítko PŘIDAT
         tk.Button(frame_form, text="Uložit", command=self.pridat_jidlo, bg="#ddd").pack(side="left", padx=10)
+
+        # --- TLAČÍTKO SMAZAT ---
+        # Je červené, aby bylo vidět, že je to destruktivní akce
+        tk.Button(frame_form, text="Smazat označené", command=self.smazat_jidlo, bg="red", fg="white").pack(side="right", padx=10)
 
         # Tabulka
         self.tree = ttk.Treeview(self.tab_jidla, columns=("ID", "Nazev", "Cena"), show="headings")
@@ -51,7 +58,9 @@ class JidelnaApp:
         
         self.naci_jidla()
 
-    # KÓD PRO ZÁLOŽKU 2: OBJEDNÁVKY
+    # ==========================================
+    # OBJEDNÁVKY
+    # ==========================================
     def setup_tab_objednavky(self):
         lbl = tk.Label(self.tab_objednavky, text="Zadejte ID jídla z nabídky:", font=("Arial", 12))
         lbl.pack(pady=20)
@@ -63,14 +72,13 @@ class JidelnaApp:
         self.entry_id_objednavka = tk.Entry(frame_obj, font=("Arial", 12), width=5)
         self.entry_id_objednavka.pack(side="left", padx=5)
 
-        # Simulujeme, že je přihlášený uživatel s ID 1
         btn = tk.Button(self.tab_objednavky, text="OBJEDNAT OBĚD", command=self.vytvorit_objednavku, bg="green", fg="white", font=("Arial", 10, "bold"))
         btn.pack(pady=20)
         
         self.lbl_status = tk.Label(self.tab_objednavky, text="", fg="blue", font=("Arial", 10))
         self.lbl_status.pack()
 
-    # FUNKCE PRO TLAČÍTKA
+    # --- FUNKCE ---
     def pridat_jidlo(self):
         nazev = self.entry_nazev.get()
         try:
@@ -87,6 +95,31 @@ class JidelnaApp:
         except ValueError:
             messagebox.showerror("Chyba", "Cena musí být číslo!")
 
+    def smazat_jidlo(self):
+        """NOVÁ FUNKCE: Smaže vybraný řádek z databáze"""
+        selected_item = self.tree.selection() # Zjistí, co je označeno myší
+        
+        if not selected_item:
+            messagebox.showwarning("Pozor", "Nejdřív musíš označit jídlo v tabulce!")
+            return
+
+        # Získáme ID z označeného řádku
+        item_data = self.tree.item(selected_item)
+        jidlo_id = item_data['values'][0] # ID je v prvním sloupci
+
+        # Potvrzovací okno
+        odpoved = messagebox.askyesno("Smazat?", f"Opravdu chceš smazat jídlo s ID {jidlo_id}?")
+        
+        if odpoved:
+            conn = database.connect_db()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM jidla WHERE id = ?", (jidlo_id,))
+            conn.commit()
+            conn.close()
+            
+            self.naci_jidla() # Obnovíme tabulku
+            messagebox.showinfo("Hotovo", "Jídlo bylo smazáno.")
+
     def naci_jidla(self):
         for row in self.tree.get_children():
             self.tree.delete(row)
@@ -98,22 +131,18 @@ class JidelnaApp:
         conn.close()
 
     def vytvorit_objednavku(self):
-        # Tady propojujeme GUI -> LOGIKU -> DATABÁZI
         jidlo_id_str = self.entry_id_objednavka.get()
-        stravnik_id = 1 # Zatím natvrdo ID 1
+        stravnik_id = 1 
         
         try:
             jidlo_id = int(jidlo_id_str)
-            
-            # 1. Ověření přes logic.py
             validni, zprava = logic.validovat_objednavku(jidlo_id, stravnik_id)
             
             if validni:
-                # 2. Uložení do DB
                 conn = database.connect_db()
                 cursor = conn.cursor()
                 cursor.execute("INSERT INTO objednavky (datum, stravnik_id, jidlo_id) VALUES (?, ?, ?)", 
-                            ("2026-02-17", stravnik_id, jidlo_id))
+                               ("2026-02-17", stravnik_id, jidlo_id))
                 conn.commit()
                 conn.close()
                 self.lbl_status.config(text=f"✅ Objednáno! (Jídlo ID: {jidlo_id})", fg="green")
@@ -121,7 +150,7 @@ class JidelnaApp:
                 self.lbl_status.config(text=f"❌ Chyba: {zprava}", fg="red")
                 
         except ValueError:
-            messagebox.showerror("Chyba", "ID jídla musí být číslo.")
+             messagebox.showerror("Chyba", "ID jídla musí být číslo.")
 
 if __name__ == "__main__":
     root = tk.Tk()
