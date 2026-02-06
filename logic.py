@@ -2,9 +2,8 @@ import database # Musime se spojit s databazi
 
 def vypocitat_cenu(cena_jidla, kategorie_stravnika):
     """
-    Vypočítá konečnou cenu.
     Pokud je to učitel, platí plnou cenu.
-    Pokud žák, má dotaci (např. platí jen 40%).
+    Pokud žák, má dotaci (platí jen 40%).
     """
     if kategorie_stravnika == "ucitel":
         return cena_jidla
