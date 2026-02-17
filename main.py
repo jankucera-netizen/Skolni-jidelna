@@ -29,34 +29,35 @@ class JidelnaApp:
     # ==========================================
     # SPRÁVA JÍDEL
     # ==========================================
-    def setup_tab_jidla(self):
-        # Formulář
-        frame_form = tk.LabelFrame(self.tab_jidla, text="Přidat / Odebrat jídlo")
-        frame_form.pack(fill="x", padx=10, pady=5)
+    def setup_tab_objednavky(self):
+        lbl = tk.Label(self.tab_objednavky, text="Zadejte ID jídla z nabídky:", font=("Arial", 12))
+        lbl.pack(pady=10)
 
-        tk.Label(frame_form, text="Název:").pack(side="left", padx=5)
-        self.entry_nazev = tk.Entry(frame_form)
-        self.entry_nazev.pack(side="left", padx=5)
+        frame_obj = tk.Frame(self.tab_objednavky)
+        frame_obj.pack(pady=5)
 
-        tk.Label(frame_form, text="Cena:").pack(side="left", padx=5)
-        self.entry_cena = tk.Entry(frame_form, width=10)
-        self.entry_cena.pack(side="left", padx=5)
+        tk.Label(frame_obj, text="ID Jídla:").pack(side="left")
+        self.entry_id_objednavka = tk.Entry(frame_obj, font=("Arial", 12), width=5)
+        self.entry_id_objednavka.pack(side="left", padx=5)
 
-        # Tlačítko PŘIDAT
-        tk.Button(frame_form, text="Uložit", command=self.pridat_jidlo, bg="#ddd").pack(side="left", padx=10)
+        # --- TUTO ČÁST JSME PŘIDALI (Výběr strávníka) ---
+        tk.Label(self.tab_objednavky, text="Kdo objednává?", font=("Arial", 10, "bold")).pack(pady=(20, 5))
 
-        # --- TLAČÍTKO SMAZAT ---
-        # Je červené, aby bylo vidět, že je to destruktivní akce
-        tk.Button(frame_form, text="Smazat označené", command=self.smazat_jidlo, bg="red", fg="white").pack(side="right", padx=10)
+        #Proměnná, která si pamatuje volbu ("zak" nebo "ucitel"),
+        self.var_typ_stravnika = tk.StringVar(value="zak") 
 
-        # Tabulka
-        self.tree = ttk.Treeview(self.tab_jidla, columns=("ID", "Nazev", "Cena"), show="headings")
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Nazev", text="Název jídla")
-        self.tree.heading("Cena", text="Cena")
-        self.tree.pack(fill="both", expand=True, padx=10, pady=5)
-        
-        self.naci_jidla()
+        frame_radio = tk.Frame(self.tab_objednavky)
+        frame_radio.pack()
+
+        tk.Radiobutton(frame_radio, text="Student (sleva 40%)", variable=self.var_typ_stravnika, value="zak").pack(side="left", padx=10)
+        tk.Radiobutton(frame_radio, text="Učitel / Cizí (plná cena)", variable=self.var_typ_stravnika, value="ucitel").pack(side="left", padx=10)
+        # ---------------------------------------------------
+
+        btn = tk.Button(self.tab_objednavky, text="OBJEDNAT OBĚD", command=self.vytvorit_objednavku, bg="green", fg="white", font=("Arial", 10, "bold"))
+        btn.pack(pady=20)
+
+        self.lbl_status = tk.Label(self.tab_objednavky, text="", fg="blue", font=("Arial", 10))
+        self.lbl_status.pack()
 
     # ==========================================
     # OBJEDNÁVKY
